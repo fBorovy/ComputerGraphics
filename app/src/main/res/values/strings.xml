@@ -1,0 +1,13 @@
+<resources>
+    <string name="app_name">ComputerGraphics</string>
+    <string name="add_canva">New canva</string>
+    <string name="upload_canva_file">Upload from file</string>
+    <string name="primitives">Primitives</string>
+    <string name="unfold_tools_menu">unfold_tools_menu</string>
+    <string name="add_line">Add line</string>
+    <string name="add_rectangle">Add rectangle</string>
+    <string name="add_circle">Add circle</string>
+    <string name="circle">Circle</string>
+    <string name="rectangle">Rectangle</string>
+    <string name="line">Line</string>
+</resources>
