@@ -60,14 +60,20 @@ fun FileOperationsPanel(
             }
         )
         CGButton(
+            textResource = R.string.save_jpeg,
+            onClick = {
+                filesViewModel.switchEnterFilenameDialogVisibility(true)
+            }
+        )
+        CGButton(
             textResource = R.string.exit,
             onClick = {
-                filesViewModel.switchExitDialogVisibility(true)
+                filesViewModel.switchExitDialogVisibility(true) //to think
             }
         )
     }
 
-    if (shouldShowEnterFilenameDialog) {
+    if (shouldShowEnterFilenameDialog) { //TODO - to jpeg?:
         FilenameDialog(
             filesViewModel = filesViewModel,
             onConfirm = {

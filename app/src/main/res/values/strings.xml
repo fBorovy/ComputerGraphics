@@ -24,4 +24,5 @@
     <string name="shapes">Shapes</string>
     <string name="shapes_hint">Hint: you can combine shapes with other images</string>
     <string name="wrong_file">Wrong file format</string>
+    <string name="save_jpeg">Save to jpeg</string>
 </resources>

@@ -1,6 +1,7 @@
 package com.fborowy.computergraphics.logic
 
 import android.graphics.Bitmap
+import android.net.Uri
 import android.util.Log
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asImageBitmap
@@ -18,6 +19,12 @@ import java.nio.ByteBuffer
 class PpmJpegViewModel: ViewModel() {
     private var _imageBitmap = MutableStateFlow<ImageBitmap?>(null)
     val imageBitmap: StateFlow<ImageBitmap?> = _imageBitmap
+    private var _jpegUri = MutableStateFlow<Uri?>(null)
+    val jpegUri: StateFlow<Uri?> = _jpegUri
+
+    fun loadJPEGImageUri(uri: Uri) {
+        _jpegUri.value = uri
+    }
 
     fun loadPPMImage(stream: InputStream) {
         viewModelScope.launch {
@@ -137,6 +144,10 @@ class PpmJpegViewModel: ViewModel() {
 
     fun resetBitmap() {
         _imageBitmap.value = null
+    }
+
+    fun resetJpegUri() {
+        _jpegUri.value = null
     }
 }
 

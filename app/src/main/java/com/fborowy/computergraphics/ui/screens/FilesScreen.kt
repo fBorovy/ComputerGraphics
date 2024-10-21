@@ -2,7 +2,6 @@ package com.fborowy.computergraphics.ui.screens
 
 import android.net.Uri
 import android.provider.OpenableColumns
-import android.util.Log
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -23,6 +22,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -30,7 +30,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -40,14 +39,13 @@ import com.fborowy.computergraphics.data.PrimitiveDataToSave
 import com.fborowy.computergraphics.logic.FilesViewModel
 import com.fborowy.computergraphics.logic.PpmJpegViewModel
 import com.fborowy.computergraphics.ui.theme.Typography
-import kotlinx.coroutines.coroutineScope
 
 @Composable
 fun FilesScreen(
     ppmJpegViewModel: PpmJpegViewModel,
     filesViewModel: FilesViewModel,
     switchToCanvasScreenWithPrimitives: (PrimitiveDataToSave?) -> Unit,
-    switchToCanvasScreenWithPPM3: () -> Unit,//(List<List<Color>>?) -> Unit,
+    switchToCanvasScreen: () -> Unit,
     onGoBack: () -> Unit,
 ) {
     val context = LocalContext.current
@@ -57,7 +55,7 @@ fun FilesScreen(
     val files = filesViewModel.loadFileNamesFromFile(context)
 
     var selectedFileUri by remember { mutableStateOf<Uri?>(null) }
-    var selectedFileName by remember { mutableStateOf<String?>(null) }
+    val selectedFileName by filesViewModel.currentFilename.collectAsState()
 
 
     val filePickerLauncher = rememberLauncherForActivityResult(
@@ -69,14 +67,19 @@ fun FilesScreen(
                 if (it.moveToFirst()) {
                     val nameIndex = it.getColumnIndex(OpenableColumns.DISPLAY_NAME)
                     val fileName = it.getString(nameIndex)
-                    if (fileName.endsWith(".ppm") || fileName.endsWith(".jpeg")) {
+                    if (fileName.endsWith(".ppm")) {
                         val inputStream = context.contentResolver.openInputStream(uri)
                         inputStream?.let { stream ->
                             ppmJpegViewModel.loadPPMImage(stream)
-                            selectedFileName = fileName
+                            filesViewModel.setCurrentFilename(fileName)
                             selectedFileUri = uri
-                            switchToCanvasScreenWithPPM3()
+                            switchToCanvasScreen()
                         }
+                    } else if (fileName.endsWith(".jpeg") || fileName.endsWith("jpg")) {
+                        ppmJpegViewModel.loadJPEGImageUri(uri)
+                        filesViewModel.setCurrentFilename(fileName)
+                        selectedFileUri = uri
+                        switchToCanvasScreen()
                     } else {
                         Toast.makeText(
                             context,

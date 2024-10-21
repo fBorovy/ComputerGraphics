@@ -53,7 +53,7 @@ fun MainScreen(
                         content = 0
                     }
                 },
-                switchToCanvasScreenWithPPM3 = {
+                switchToCanvasScreen = {
                     content = 0
                 },
                 onGoBack = {
@@ -100,6 +100,7 @@ fun MainScreen(
                                 },
                                 onExit = {
                                     ppmJpegViewModel.resetBitmap()
+                                    ppmJpegViewModel.resetJpegUri()
                                     filesViewModel.setCurrentFilename(null)
                                     primitiveToolsViewModel.clearCanvas()
                                     content = 1
