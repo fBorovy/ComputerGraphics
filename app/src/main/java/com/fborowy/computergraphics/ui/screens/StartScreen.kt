@@ -61,7 +61,7 @@ fun StartScreen(
         ) {
             Column(
                 modifier = Modifier.clickable {
-
+                    onLoadCanvasFromFileClick()
                 },
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {

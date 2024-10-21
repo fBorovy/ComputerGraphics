@@ -26,9 +26,12 @@ import androidx.compose.ui.unit.dp
 import com.fborowy.computergraphics.logic.Tool
 
 @Composable
-fun BottomPanel() {
+fun BottomPanel(
+    onToolSelect: (Int) -> Unit
+) {
     val listOfTools = listOf(
         Tool.PRIMITIVES,
+        Tool.FILE
     )
     var currentTool by rememberSaveable { mutableIntStateOf(1) }
 
@@ -61,13 +64,43 @@ fun BottomPanel() {
             contentAlignment = Alignment.Center
         ) {
             Icon(
+                painter = painterResource(Tool.PPM_JPEG.painter),
+                contentDescription = stringResource(Tool.PPM_JPEG.stringResource),
+                tint = MaterialTheme.colorScheme.primary,
+                modifier = Modifier
+                    .size(45.dp)
+                    .clickable {
+                        onToolSelect(2)
+                    }
+            )
+        }
+        Box(
+            modifier = Modifier.weight(1f),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
                 painter = painterResource(Tool.PRIMITIVES.painter),
                 contentDescription = stringResource(Tool.PRIMITIVES.stringResource),
                 tint = MaterialTheme.colorScheme.primary,
                 modifier = Modifier
                     .size(45.dp)
                     .clickable {
-
+                        onToolSelect(0)
+                    }
+            )
+        }
+        Box(
+            modifier = Modifier.weight(1f),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                painter = painterResource(Tool.FILE.painter),
+                contentDescription = stringResource(Tool.FILE.stringResource),
+                tint = MaterialTheme.colorScheme.primary,
+                modifier = Modifier
+                    .size(45.dp)
+                    .clickable {
+                        onToolSelect(1)
                     }
             )
         }

@@ -10,4 +10,18 @@
     <string name="circle">Circle</string>
     <string name="rectangle">Rectangle</string>
     <string name="line">Line</string>
+    <string name="files">Files</string>
+    <string name="save">Save</string>
+    <string name="save_as">Save as</string>
+    <string name="enter_filename">Enter filename:</string>
+    <string name="filename">Filename</string>
+    <string name="cancel">Cancel</string>
+    <string name="exit">Exit</string>
+    <string name="exit_ask">Exit? Unsaved changes will be lost.</string>
+    <string name="go_back">Go back</string>
+    <string name="ppm_jpeg">PPM and JPEG images</string>
+    <string name="search_file">File search</string>
+    <string name="shapes">Shapes</string>
+    <string name="shapes_hint">Hint: you can combine shapes with other images</string>
+    <string name="wrong_file">Wrong file format</string>
 </resources>

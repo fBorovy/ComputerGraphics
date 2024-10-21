@@ -1,43 +1,63 @@
 package com.fborowy.computergraphics.ui.screens
 
+import android.util.Log
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectDragGestures
+import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.gestures.detectTransformGestures
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.zIndex
+import com.fborowy.computergraphics.logic.FilesViewModel
+import com.fborowy.computergraphics.logic.PpmJpegViewModel
 import com.fborowy.computergraphics.logic.Primitive
 import com.fborowy.computergraphics.logic.PrimitiveToolsViewModel
+import com.fborowy.computergraphics.ui.theme.Typography
 
 @Composable
 fun CanvasScreen(
-    primitiveToolsViewModel: PrimitiveToolsViewModel
+    filesViewModel: FilesViewModel,
+    primitiveToolsViewModel: PrimitiveToolsViewModel,
+    ppmJpegViewModel: PpmJpegViewModel,
+    currentFileName: String?,
 ) {
-    var startPoint by remember { mutableStateOf<Offset?>(null) }
-    var endPoint by remember { mutableStateOf<Offset?>(null) }
-    val selectedPrimitiveOffsets by primitiveToolsViewModel.selectedPrimitive.collectAsState()
-    val selectedPrimitiveType by primitiveToolsViewModel.selectedPrimitiveType.collectAsState()
+    val keyboardController = LocalSoftwareKeyboardController.current
     val listOfPrimitives by primitiveToolsViewModel.primitivesList.collectAsState()
     val listOfPrimitivesOffsets by primitiveToolsViewModel.primitivesOffsetsList.collectAsState()
+    val selectedPrimitiveIndex by primitiveToolsViewModel.selectedPrimitiveIndex.collectAsState()
     val activeColor = MaterialTheme.colorScheme.secondary
     val inactiveColor = MaterialTheme.colorScheme.primary
+    val selectedFirst by primitiveToolsViewModel.isFirstPointSelected.collectAsState()
+    var isDragging by remember { mutableStateOf(false) }
+    val bitmap by ppmJpegViewModel.imageBitmap.collectAsState()
+
+    var scale by remember { mutableFloatStateOf(1f) }
+    var offsetX by remember { mutableFloatStateOf(0f) }
+    var offsetY by remember { mutableFloatStateOf(0f) }
 
 
     Box(
@@ -50,84 +70,74 @@ fun CanvasScreen(
                 primitiveToolsViewModel.setCanvasStartingPointsOffsetsAndBottomRightCornerOffset(Offset(size.width.toFloat(), size.height.toFloat()))
             }
     ) {
+        Text(
+            text = currentFileName ?: "",
+            style = Typography.labelSmall,
+            modifier = Modifier.zIndex(1f).align(Alignment.TopEnd).padding(top = 3.dp, end = 3.dp)
+        )
         Canvas(
             modifier = Modifier
                 .fillMaxSize()
-                .pointerInput(Unit) {
-                    detectDragGestures(
-                        onDragStart = { offset ->
-                            startPoint = offset // Zapisanie pierwszego punktu
-                        },
-                        onDragEnd = {
-                            // Resetowanie po zakończeniu rysowania
-                            startPoint = null
-                            endPoint = null
-                        },
-                        onDrag = { change, _ ->
-                            change.consume()
-                            endPoint = change.position // Aktualizacja końcowego punktu
+                .pointerInput(bitmap) {
+                    if (bitmap != null && selectedPrimitiveIndex == null) {
+                        detectTransformGestures { _, pan, zoom, _ ->
+                            scale *= zoom
+                            offsetX += pan.x
+                            offsetY += pan.y
                         }
-                    )
+                    }
+                }.pointerInput(selectedPrimitiveIndex) { //TODO
+                    if (selectedPrimitiveIndex != null) {
+                        detectDragGestures(
+                            onDragStart = { offset ->
+                                isDragging = true
+                                primitiveToolsViewModel.selectPrimitiveByClick(offset)
+                            },
+                            onDragEnd = {
+                                isDragging = false
+                                primitiveToolsViewModel.changeSelectedPointOfSelectedPrimitive(null)
+                            },
+                            onDrag = { change, dragAmount ->
+                                if (isDragging) {
+                                    change.consume()
+                                    if (selectedFirst != null) {
+                                        primitiveToolsViewModel.changeSelectedPrimitiveOffset(
+                                            a = selectedFirst!!,
+                                            drag = dragAmount
+                                        )
+                                    }
+                                }
+                            }
+                        )
+                    }
+                }.pointerInput(Unit) {
+                    detectTapGestures { offset ->
+                        keyboardController?.hide()
+                        primitiveToolsViewModel.unselectPrimitive()
+                        primitiveToolsViewModel.selectPrimitiveByClick(offset)
+                    }
                 }
-
         ) {
-            if (startPoint != null && endPoint != null) {
-                // Obliczanie promienia
-                val radius = (startPoint!! - endPoint!!).getDistance() / 2
-                // Obliczanie środka
-                val center = Offset(
-                    (startPoint!!.x + endPoint!!.x) / 2,
-                    (startPoint!!.y + endPoint!!.y) / 2
+            if (bitmap != null) {
+                val canvasWidth = size.width
+                val aspectRatio = bitmap!!.width.toFloat() / bitmap!!.height.toFloat()
+                val scaledHeight = canvasWidth / aspectRatio
+                Log.d("ppm", "started drawing bitmap")
+                Log.d("ppm", bitmap!!.width.toString() + " " + bitmap!!.height.toString())
+                drawImage(
+                    image = bitmap!!,
+                    dstSize = IntSize(
+                        (canvasWidth * scale).toInt(),
+                        (scaledHeight * scale).toInt()
+                    ),
+                    dstOffset = IntOffset(offsetX.toInt(), offsetY.toInt()),
                 )
-                drawCircle(
-                    color = Color.White,
-                    radius = radius,
-                    center = center,
-                    style = Stroke(width = 1f)
-                )
+
             }
-//            if (selectedPrimitiveOffset != null) {
-//                drawCircle(
-//                    color = activeColor,
-//                    radius = 5f,
-//                    center = selectedPrimitiveOffset!!.first,
-//
-//                )
-//                drawCircle(
-//                    color = activeColor,
-//                    radius = 5f,
-//                    center = selectedPrimitiveOffset!!.second
-//                )
-//                when (selectedPrimitiveType) {
-//                    Primitive.CIRCLE.type -> {
-//                        drawCircle(
-//                            color = activeColor,
-//                            radius = (selectedPrimitiveOffset!!.second - selectedPrimitiveOffset!!.first).getDistance() / 2,
-//                            center = Offset(
-//                                (selectedPrimitiveOffset!!.first.x + selectedPrimitiveOffset!!.second.x) / 2,
-//                                (selectedPrimitiveOffset!!.first.y + selectedPrimitiveOffset!!.second.y) / 2
-//                            ),
-//                            alpha = 0.5f,
-//                            style = Stroke(width = 2f)
-//                        )
-//                    }
-//                    Primitive.RECTANGLE.type -> {
-//
-//                    }
-//                    Primitive.LINE.type -> {
-//
-//                    }
-//                    else -> {}
-//                }
-//            }
             if (listOfPrimitives.isNotEmpty()) {
                 for ((index, primitive) in listOfPrimitives.withIndex()) {
 
-                    val color = if (
-                        selectedPrimitiveOffsets!!.first == listOfPrimitivesOffsets[index].first &&
-                        selectedPrimitiveOffsets!!.second == listOfPrimitivesOffsets[index].second &&
-                        selectedPrimitiveType == primitive
-                    ) activeColor else inactiveColor
+                    val color = if (index == selectedPrimitiveIndex) activeColor else inactiveColor
 
                     drawCircle(
                         color = color,
@@ -152,10 +162,10 @@ fun CanvasScreen(
                         Primitive.CIRCLE.type -> {
                             drawCircle(
                                 color = color,
-                                radius = (selectedPrimitiveOffsets!!.second - selectedPrimitiveOffsets!!.first).getDistance() / 2,
+                                radius = (listOfPrimitivesOffsets[index].second - listOfPrimitivesOffsets[index].first).getDistance() / 2,
                                 center = Offset(
-                                    (selectedPrimitiveOffsets!!.first.x + selectedPrimitiveOffsets!!.second.x) / 2,
-                                    (selectedPrimitiveOffsets!!.first.y + selectedPrimitiveOffsets!!.second.y) / 2
+                                    (listOfPrimitivesOffsets[index].first.x + listOfPrimitivesOffsets[index].second.x) / 2,
+                                    (listOfPrimitivesOffsets[index].first.y + listOfPrimitivesOffsets[index].second.y) / 2,
                                 ),
                                 style = Stroke(width = 2f)
                             )
