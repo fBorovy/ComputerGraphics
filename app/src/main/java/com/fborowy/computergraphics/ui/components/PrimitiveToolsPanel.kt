@@ -20,7 +20,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.fborowy.computergraphics.R
-import com.fborowy.computergraphics.logic.Primitive
+import com.fborowy.computergraphics.data.Primitive
 import com.fborowy.computergraphics.logic.PrimitiveToolsViewModel
 
 @Composable

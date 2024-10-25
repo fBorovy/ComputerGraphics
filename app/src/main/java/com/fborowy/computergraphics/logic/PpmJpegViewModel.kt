@@ -10,6 +10,7 @@ import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
+import java.io.BufferedInputStream
 import java.io.BufferedReader
 import java.io.InputStream
 import java.io.InputStreamReader
@@ -21,6 +22,8 @@ class PpmJpegViewModel: ViewModel() {
     val imageBitmap: StateFlow<ImageBitmap?> = _imageBitmap
     private var _jpegUri = MutableStateFlow<Uri?>(null)
     val jpegUri: StateFlow<Uri?> = _jpegUri
+    private var _jpegDataToSave = MutableStateFlow<Pair<String, Int>?>(null)
+    val jpegFileNameToSave = _jpegDataToSave
 
     fun loadJPEGImageUri(uri: Uri) {
         _jpegUri.value = uri
@@ -55,6 +58,7 @@ class PpmJpegViewModel: ViewModel() {
 
         val width = headerValues[1].toInt()
         val height = headerValues[2].toInt()
+
         val maxColorValue = headerValues[3].toInt()
 
         val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
@@ -122,19 +126,43 @@ class PpmJpegViewModel: ViewModel() {
                 bitmap.setPixels(pixels, 0, width, 0, 0, width, height)
             }
             "P6" -> {
+//                val bytesPerPixel = 3
+//                val byteArray = ByteArray(width * height * bytesPerPixel)
+//                stream.read(byteArray)
+//                val buffer = ByteBuffer.wrap(byteArray)
+//                val pixelLine = IntArray(width)
+//                for (y in 0 until height) {
+//                    for (x in 0 until width) {
+//                        val r = buffer.get().toInt() and 0xFF
+//                        val g = buffer.get().toInt() and 0xFF
+//                        val b = buffer.get().toInt() and 0xFF
+//                        pixelLine[x] = android.graphics.Color.rgb(r, g, b)
+//                    }
+//                        bitmap.setPixels(pixelLine, 0, width, 0, y, width, 1)
+//                }
                 val bytesPerPixel = 3
-                val byteArray = ByteArray(width * height * bytesPerPixel)
-                stream.read(byteArray)
-                val buffer = ByteBuffer.wrap(byteArray)
-                for (y in 0 until height) {
-                    val pixelLine = IntArray(width)
-                    for (x in 0 until width) {
-                        val r = buffer.get().toInt() and 0xFF
-                        val g = buffer.get().toInt() and 0xFF
-                        val b = buffer.get().toInt() and 0xFF
-                        pixelLine[x] = android.graphics.Color.rgb(r, g, b)
+                val bufferSize = width * bytesPerPixel * 10 // Adjust the block size as needed
+                val byteBuffer = ByteArray(bufferSize)
+                var currentRow = 0
+                while (currentRow < height) {
+                    val bytesRead = stream.read(byteBuffer)
+                    if (bytesRead == -1) break
+
+                    val buffer = ByteBuffer.wrap(byteBuffer)
+                    val rowsToProcess = minOf(10, height - currentRow)
+
+                    for (row in 0 until height) {
+                        if (row >= rowsToProcess) break
+                        val pixelLine = IntArray(width)
+                        for (col in 0 until width) {
+                            val r = buffer.get().toInt() and 0xFF
+                            val g = buffer.get().toInt() and 0xFF
+                            val b = buffer.get().toInt() and 0xFF
+                            pixelLine[col] = android.graphics.Color.rgb(r, g, b)
+                        }
+                        bitmap.setPixels(pixelLine, 0, width, 0, currentRow, width, 1)
+                        currentRow++
                     }
-                    bitmap.setPixels(pixelLine, 0, width, 0, y, width, 1)
                 }
             }
         }
@@ -149,86 +177,8 @@ class PpmJpegViewModel: ViewModel() {
     fun resetJpegUri() {
         _jpegUri.value = null
     }
+
+    fun switchJpegDataToSave(data: Pair<String, Int>?) {
+        _jpegDataToSave.value = data
+    }
 }
-
-//"P3" -> {
-//    Log.d("ppm", "P3")
-//    val pixels = IntArray(width * height)
-//    val rgb = IntArray(3)
-//    val regex = Regex("\\s+")
-//    val allValues = StringBuilder()
-//
-//    reader.forEachLine { line ->
-//        val cleanedLine = line.substringBefore("#").trim()
-//        if (cleanedLine.isNotEmpty()) {
-//            allValues.append(cleanedLine).append(" ")
-//        }
-//    }
-//    val values = allValues.toString().split(regex)
-//
-//    var widthCounter = 0
-//    var heightCounter = 0
-//    var colorCounter = 0
-//
-//    for (value in values) {
-//        if (value.isNotEmpty()) {
-//            rgb[colorCounter++] = (value.toFloat() * 255 / maxColorValue).toInt()
-//
-//            if (colorCounter == 3) {
-//                pixels[heightCounter * width + widthCounter++] = android.graphics.Color.rgb(rgb[0], rgb[1], rgb[2])
-//                colorCounter = 0
-//
-//                if (widthCounter == width) {
-//                    widthCounter = 0
-//                    heightCounter++
-//                }
-//            }
-//        }
-//    }
-//    bitmap.setPixels(pixels, 0, width, 0, 0, width, height)
-//}
-
-
-//"P3" -> {
-//    Log.d("ppm", "P3")
-//
-//    val pixels = IntArray(width * height)
-//    val rgb = IntArray(3)
-//    var widthCounter = 0
-//    var heightCounter = 0
-//    var colorCounter = 0
-//    val regex = Regex("\\s+")
-//    var line: String? = reader.readLine()
-//    while (line != null) {
-//
-//        //val allValues = StringBuilder()
-//
-////                reader.forEachLine { line ->
-////                    val cleanedLine = line.substringBefore("#").trim()
-////                    if (cleanedLine.isNotEmpty()) {
-////                        allValues.append(cleanedLine).append(" ")
-////                    }
-////                }
-//        val cleanedLine = line.substringBefore("#").trim()
-//        val values: List<String> = cleanedLine.split(regex)
-//
-//        for (value in values) {
-//            if (value.isNotEmpty()) {
-//                rgb[colorCounter++] = (value.toFloat() * 255 / maxColorValue).toInt()
-//
-//                if (colorCounter == 3) {
-//                    pixels[heightCounter * width + widthCounter++] =
-//                        android.graphics.Color.rgb(rgb[0], rgb[1], rgb[2])
-//                    colorCounter = 0
-//
-//                    if (widthCounter == width) {
-//                        widthCounter = 0
-//                        heightCounter++
-//                    }
-//                }
-//            }
-//        }
-//        bitmap.setPixels(pixels, 0, width, 0, 0, width, height)
-//        line = reader.readLine()
-//    }
-//}

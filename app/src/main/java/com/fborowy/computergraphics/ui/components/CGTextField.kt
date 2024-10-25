@@ -18,11 +18,11 @@ import com.fborowy.computergraphics.ui.theme.Typography
 
 @Composable
 fun CGTextField(
-    modifier: Modifier,
+    modifier: Modifier = Modifier,
     value: String,
     isActive: Boolean,
     onValueChange: (String) -> Unit,
-    onFocusChanged: (Boolean) -> Unit,
+    onFocusChanged: (Boolean) -> Unit = {},
 ) {
     val style = if (isActive) Typography.bodySmall.copy(color = MaterialTheme.colorScheme.secondary) else Typography.bodySmall
 

@@ -6,7 +6,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -23,7 +22,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import com.fborowy.computergraphics.logic.Tool
+import com.fborowy.computergraphics.data.Tool
 
 @Composable
 fun BottomPanel(
@@ -31,7 +30,9 @@ fun BottomPanel(
 ) {
     val listOfTools = listOf(
         Tool.PRIMITIVES,
-        Tool.FILE
+        Tool.FILE,
+        Tool.PPM_JPEG,
+        Tool.COLORIZE,
     )
     var currentTool by rememberSaveable { mutableIntStateOf(1) }
 
@@ -64,13 +65,28 @@ fun BottomPanel(
             contentAlignment = Alignment.Center
         ) {
             Icon(
+                painter = painterResource(Tool.COLORIZE.painter),
+                contentDescription = stringResource(Tool.COLORIZE.stringResource),
+                tint = MaterialTheme.colorScheme.primary,
+                modifier = Modifier
+                    .size(45.dp)
+                    .clickable {
+                        onToolSelect(Tool.COLORIZE.id)
+                    }
+            )
+        }
+        Box(
+            modifier = Modifier.weight(1f),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
                 painter = painterResource(Tool.PPM_JPEG.painter),
                 contentDescription = stringResource(Tool.PPM_JPEG.stringResource),
                 tint = MaterialTheme.colorScheme.primary,
                 modifier = Modifier
                     .size(45.dp)
                     .clickable {
-                        onToolSelect(2)
+                        onToolSelect(Tool.PPM_JPEG.id)
                     }
             )
         }
@@ -85,7 +101,7 @@ fun BottomPanel(
                 modifier = Modifier
                     .size(45.dp)
                     .clickable {
-                        onToolSelect(0)
+                        onToolSelect(Tool.PRIMITIVES.id)
                     }
             )
         }
@@ -100,7 +116,7 @@ fun BottomPanel(
                 modifier = Modifier
                     .size(45.dp)
                     .clickable {
-                        onToolSelect(1)
+                        onToolSelect(Tool.FILE.id)
                     }
             )
         }

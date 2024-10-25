@@ -1,4 +1,4 @@
-package com.fborowy.computergraphics.logic
+package com.fborowy.computergraphics.data
 
 import com.fborowy.computergraphics.R
 

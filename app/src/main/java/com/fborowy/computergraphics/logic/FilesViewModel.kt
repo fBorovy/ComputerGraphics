@@ -2,26 +2,17 @@ package com.fborowy.computergraphics.logic
 
 import android.content.Context
 import android.util.Log
-import androidx.collection.mutableIntListOf
-import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
 import com.fborowy.computergraphics.data.PrimitiveDataToSave
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
+import kotlinx.coroutines.flow.update
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.InternalSerializationApi
 import kotlinx.serialization.cbor.Cbor
 import kotlinx.serialization.decodeFromByteArray
 import kotlinx.serialization.serializer
-import java.io.BufferedInputStream
-import java.io.BufferedReader
 import java.io.File
-import java.io.InputStream
-import java.io.InputStreamReader
 
 const val MAX_FILENAME_SIZE = 40
 
@@ -61,8 +52,10 @@ class FilesViewModel: ViewModel() {
     }
 
     fun switchEnterFilenameDialogVisibility(switch: Boolean){
+        Log.d("new ilename", _newFilename.value)
+        _newFilename.value = currentFilename.value?.substringBefore('.') ?: ""
+        Log.d("new ilename", _newFilename.value)
         _shouldShowEnterFilenameDialog.value = switch
-        Log.d("shouldShow", shouldShowEnterFilenameDialog.toString())
     }
 
     fun editNewFilename(newName: String) {
@@ -89,6 +82,10 @@ class FilesViewModel: ViewModel() {
 
     fun setCurrentFilename(name: String?) {
         _currentFilename.value = name
+    }
+
+    fun getCurrentFilename(): String {
+        return currentFilename.value?:""
     }
 
 
