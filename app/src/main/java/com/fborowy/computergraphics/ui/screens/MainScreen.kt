@@ -26,6 +26,7 @@ import com.fborowy.computergraphics.ui.components.ColorizePanel
 import com.fborowy.computergraphics.ui.components.FileOperationsPanel
 import com.fborowy.computergraphics.ui.components.PpmJpegImagesPanel
 import com.fborowy.computergraphics.ui.components.PrimitiveToolsPanel
+import com.google.android.filament.Engine
 
 @Composable
 fun MainScreen(
@@ -33,6 +34,7 @@ fun MainScreen(
     ppmJpegViewModel: PpmJpegViewModel = viewModel(),
     filesViewModel: FilesViewModel = viewModel(),
     colorizeViewModel: ColorizeViewModel = viewModel(),
+    engine: Engine,
 ) {
     val context = LocalContext.current
     val focusManager = LocalFocusManager.current
@@ -89,6 +91,7 @@ fun MainScreen(
                         colorizeViewModel = colorizeViewModel,
                         currentFileName = currentFilename,
                         selectedTool = selectedTool,
+                        engine = engine,
                     )
                 }
                 Box(

@@ -2,15 +2,21 @@ package com.fborowy.computergraphics.ui.screens
 
 import android.graphics.Bitmap
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.gestures.detectTransformGestures
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -27,18 +33,23 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asAndroidBitmap
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.vector.Path
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
+import com.fborowy.computergraphics.R
 import com.fborowy.computergraphics.data.Primitive
 import com.fborowy.computergraphics.data.Tool
 import com.fborowy.computergraphics.logic.ColorizeViewModel
@@ -46,8 +57,11 @@ import com.fborowy.computergraphics.logic.PpmJpegViewModel
 import com.fborowy.computergraphics.logic.PrimitiveToolsViewModel
 import com.fborowy.computergraphics.logic.functions.loadBitmapFromUri
 import com.fborowy.computergraphics.logic.functions.saveBitmapToJpegToMediaStore
+import com.fborowy.computergraphics.ui.components.HSVCone3D
 import com.fborowy.computergraphics.ui.components.HSVConeCrossSectionCircle
 import com.fborowy.computergraphics.ui.theme.Typography
+import com.google.android.filament.Engine
+import io.github.sceneview.SceneView
 
 @Composable
 fun CanvasScreen(
@@ -56,9 +70,10 @@ fun CanvasScreen(
     colorizeViewModel: ColorizeViewModel,
     currentFileName: String?,
     selectedTool: Int,
+    engine: Engine,
 ) {
     val context = LocalContext.current
-   val focusManager = LocalFocusManager.current
+    val focusManager = LocalFocusManager.current
     val keyboardController = LocalSoftwareKeyboardController.current
     val listOfPrimitives by primitiveToolsViewModel.primitivesList.collectAsState()
     val listOfPrimitivesOffsets by primitiveToolsViewModel.primitivesOffsetsList.collectAsState()
@@ -74,6 +89,10 @@ fun CanvasScreen(
     val hue by colorizeViewModel.hue.collectAsState()
     val saturation by colorizeViewModel.saturation.collectAsState()
     val colorValue by colorizeViewModel.colorValue.collectAsState()
+    val start = Offset(100f, 400f)          // Punkt początkowy
+    val control1 = Offset(200f, 100f)       // Pierwszy punkt kontrolny
+    val control2 = Offset(500f, 100f)       // Drugi punkt kontrolny
+    val end = Offset(600f, 400f)            // Punkt końcowy
 
 
     var scale by remember { mutableFloatStateOf(1f) }
@@ -103,7 +122,7 @@ fun CanvasScreen(
                     .fillMaxSize()
                     .padding(horizontal = 10.dp)
                     .clip(RoundedCornerShape(7.dp, 7.dp, 7.dp, 7.dp))
-                    //.background(MaterialTheme.colorScheme.tertiary)
+                    .background(MaterialTheme.colorScheme.tertiary)
                     .onSizeChanged { size ->
                         primitiveToolsViewModel.setCanvasStartingPointsOffsetsAndBottomRightCornerOffset(Offset(size.width.toFloat(), size.height.toFloat()))
                     }
@@ -189,6 +208,26 @@ fun CanvasScreen(
                         )
                     }
 
+                    val path = androidx.compose.ui.graphics.Path().apply {
+                        moveTo(start.x, start.y)
+                        cubicTo(
+                            control1.x, control1.y,
+                            control2.x, control2.y,
+                            end.x, end.y
+                        )
+                    }
+
+                    drawPath(
+                        path = path,
+                        color = Color.Red,
+                        style = Stroke(
+                            width = 5f
+                        )
+                    )
+                    drawCircle(Color.Blue, 8f, control1)
+                    drawCircle(Color.Blue, 8f, control2)
+                    drawCircle(Color.Green, 8f, start)
+                    drawCircle(Color.Green, 8f, end)
                     if (listOfPrimitives.isNotEmpty()) {
                         for ((index, primitive) in listOfPrimitives.withIndex()) {
 
@@ -248,12 +287,29 @@ fun CanvasScreen(
         Tool.COLORIZE.id -> {
             Row(
                 modifier = Modifier.fillMaxSize()
+                    .padding(start = 20.dp)
             ) {
-                Box(
+                Column(
                     modifier = Modifier
-                        .weight(2f)
+                        .weight(2f),
+                    horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-
+                    Box(
+                        modifier = Modifier
+                            .weight(1f)
+                            .fillMaxSize()
+                            .padding(vertical = 50.dp, horizontal = 108.dp)
+                            .clip(RoundedCornerShape(3.dp))
+                            .background(Color.hsv(hue, saturation, colorValue))
+                    )
+                    Box(
+                        modifier = Modifier.weight(2f)
+                    ) {
+                        HSVCone3D(
+                            engine = engine,
+                            hue = hue,
+                        )
+                    }
                 }
                 Column(
                     modifier = Modifier
@@ -270,11 +326,17 @@ fun CanvasScreen(
                             colorValue,
                         )
                     }
-                    Box(
+                    BoxWithConstraints(
                         modifier = Modifier
                             .weight(2f)
+                            .padding(bottom = 50.dp)
                     ) {
-
+                        Icon(
+                            modifier = Modifier
+                                .offset { IntOffset(0, maxHeight.roundToPx() - (maxHeight * colorValue).roundToPx()) },
+                            painter = painterResource(R.drawable.arrow_back),
+                            contentDescription = stringResource(R.string.color_value_indicator),
+                        )
                     }
                 }
             }

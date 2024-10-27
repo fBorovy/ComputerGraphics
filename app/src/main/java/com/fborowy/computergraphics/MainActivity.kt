@@ -19,6 +19,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.fborowy.computergraphics.logic.PrimitiveToolsViewModel
 import com.fborowy.computergraphics.ui.screens.MainScreen
 import com.fborowy.computergraphics.ui.theme.ComputerGraphicsTheme
+import io.github.sceneview.rememberEngine
 
 class MainActivity : ComponentActivity() {
 
@@ -28,6 +29,7 @@ class MainActivity : ComponentActivity() {
         setContent {
             ComputerGraphicsTheme {
                 val keyboardController = LocalSoftwareKeyboardController.current
+                val engine = rememberEngine()
                 Box(
                     modifier = Modifier.fillMaxSize()
                         .pointerInput(Unit) {
@@ -38,7 +40,7 @@ class MainActivity : ComponentActivity() {
                         .background(MaterialTheme.colorScheme.background)
                         .systemBarsPadding()
                 ){
-                    MainScreen()
+                    MainScreen(engine = engine)
                 }
             }
         }

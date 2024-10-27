@@ -68,6 +68,16 @@ dependencies {
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
 
+    //viewmodel
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:$2.8.6")
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-cbor:1.6.0")
+    //binary format files
+    implementation(libs.kotlinx.serialization.cbor)
+    //sceneview
+    implementation("io.github.sceneview:sceneview:2.2.1")
+
+
+
+//sceneform for 3D graphics - DEPRECATED?
+//    implementation("com.google.ar.sceneform:core:1.17.1")
+//    implementation("com.google.ar.sceneform:ux:1.17.1")
 }

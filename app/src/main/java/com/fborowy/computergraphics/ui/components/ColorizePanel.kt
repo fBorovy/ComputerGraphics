@@ -138,14 +138,6 @@ fun ColorizePanel(
                     onFocusChanged = { colorizeViewModel.setActiveParameter(if(it) 2 else null)}
                 )
             }
-            Box(
-                modifier = Modifier
-                    .padding(vertical = 20.dp)
-                    .width(55.dp)
-                    .height(20.dp)
-                    .clip(RoundedCornerShape(3.dp))
-                    .background(Color.hsv(hue, saturation, colorValue))
-            )
         }
         Column (
             modifier = Modifier.verticalScroll(rememberScrollState()),

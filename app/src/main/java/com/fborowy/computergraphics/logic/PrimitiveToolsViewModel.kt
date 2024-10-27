@@ -27,6 +27,7 @@ class PrimitiveToolsViewModel: ViewModel() {
     private var _isFirstPointSelected: MutableStateFlow<Boolean?> = MutableStateFlow(null)
     val isFirstPointSelected: StateFlow<Boolean?> = _isFirstPointSelected
 
+
     var canvasStartingPoints: Pair<Offset, Offset>? = null
 
 

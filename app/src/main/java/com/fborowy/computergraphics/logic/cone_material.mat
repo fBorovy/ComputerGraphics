@@ -1,0 +1,8 @@
+fragment {
+    void material(inout MaterialInputs inputs) {
+        prepareMaterial(inputs);
+        float hue = /* calculate based on vertex or UV */;
+        vec3 hsv = vec3(hue, 1.0, 1.0); // Full saturation and value
+        inputs.baseColor.rgb = hsvToRgb(hsv); // Convert to RGB
+    }
+}
